@@ -1,0 +1,6 @@
+<resources>
+    <color name="bubble_background">#121212</color>
+    <color name="bubble_foreground">#FFFFFF</color>
+    <color name="panel_background">#1E1E24</color>
+    <color name="launcher_icon_background">#2D2D2D</color>
+</resources>

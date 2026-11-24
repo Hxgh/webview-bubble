@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Web Shell</string>
+    <string name="default_url">https://zcode.z.ai/cn/</string>
+    <string name="apply">应用</string>
+    <string name="cancel">取消</string>
+    <string name="download_started">下载已开始</string>
+    <string name="download_failed">无法开始下载</string>
+    <string name="no_app">未找到支持此链接的应用</string>
+</resources>
