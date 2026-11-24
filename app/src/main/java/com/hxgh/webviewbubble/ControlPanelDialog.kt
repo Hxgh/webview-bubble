@@ -53,6 +53,7 @@ class ControlPanelDialog(
         val inputBg = if (isDark) Color.rgb(22, 22, 24) else Color.rgb(242, 242, 247)
         val primaryBtnBg = if (isDark) Color.WHITE else Color.BLACK
         val primaryBtnText = if (isDark) Color.BLACK else Color.WHITE
+        val chipBg = if (isDark) Color.argb(25, 255, 255, 255) else Color.argb(14, 0, 0, 0)
 
         // 外层阴影半透明遮罩 (点击即闭环退出)
         rootLayout = FrameLayout(context).apply {
@@ -173,6 +174,42 @@ class ControlPanelDialog(
         inputRow.addView(input)
         inputRow.addView(btnApply)
         cardLayout.addView(inputRow)
+
+        // 快捷站点切换 (一键无缝切换 ZCode 与 T3 Code)
+        val siteSwitchRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, dp(10f), 0, 0)
+        }
+
+        val sites = listOf(
+            "⚡ ZCode" to "https://zcode.z.ai/cn/",
+            "🚀 T3 Code" to "https://t3.codes/zh"
+        )
+
+        for ((name, url) in sites) {
+            val isActive = currentUrl.startsWith(url)
+            val pill = TextView(context).apply {
+                text = name
+                textSize = 12f
+                typeface = if (isActive) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+                setTextColor(if (isActive) primaryBtnText else textColor)
+                background = GradientDrawable().apply {
+                    setColor(if (isActive) primaryBtnBg else chipBg)
+                    cornerRadius = dp(10f).toFloat()
+                    if (!isActive) setStroke(dp(1f), borderColor)
+                }
+                setPadding(dp(12f), dp(6f), dp(12f), dp(6f))
+                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                    setMargins(0, 0, dp(8f), 0)
+                }
+                setOnClickListener {
+                    dismiss()
+                    callbacks.onApplyUrl(url)
+                }
+            }
+            siteSwitchRow.addView(pill)
+        }
+        cardLayout.addView(siteSwitchRow)
 
         // 3. 自动吸附倒计时
         val autoDockTitle = TextView(context).apply {

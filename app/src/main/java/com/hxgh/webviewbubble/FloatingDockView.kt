@@ -12,7 +12,9 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
+import android.view.VelocityTracker
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.animation.DecelerateInterpolator
@@ -77,6 +79,7 @@ class FloatingDockView(context: Context) : FrameLayout(context) {
     private var downRawY = 0f
     private var startTranslationX = 0f
     private var startTranslationY = 0f
+    private var velocityTracker: VelocityTracker? = null
 
     init {
         clipChildren = false

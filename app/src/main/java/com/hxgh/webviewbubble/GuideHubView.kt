@@ -152,6 +152,37 @@ class GuideHubView(
         inputRow.addView(urlInput)
         inputRow.addView(btnGo)
         inputCard.addView(inputRow)
+
+        val quickRow = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, dp(12f), 0, 0)
+        }
+
+        val sites = listOf(
+            "⚡ ZCode 官方主页" to "https://zcode.z.ai/cn/",
+            "🚀 T3 Code 控制中心" to "https://t3.codes/zh"
+        )
+
+        for ((name, url) in sites) {
+            val pill = TextView(context).apply {
+                text = name
+                textSize = 12f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(textColor)
+                background = GradientDrawable().apply {
+                    setColor(inputBg)
+                    cornerRadius = dp(10f).toFloat()
+                    setStroke(dp(1f), borderColor)
+                }
+                setPadding(dp(12f), dp(7f), dp(12f), dp(7f))
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                    setMargins(0, 0, dp(8f), 0)
+                }
+                setOnClickListener { onUrlSelected(url) }
+            }
+            quickRow.addView(pill)
+        }
+        inputCard.addView(quickRow)
         container.addView(inputCard)
 
         // 3. 操作与体验指引卡片
