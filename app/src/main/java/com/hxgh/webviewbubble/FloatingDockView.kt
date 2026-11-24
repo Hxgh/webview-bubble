@@ -237,6 +237,7 @@ class FloatingDockView(context: Context) : FrameLayout(context) {
      */
     fun dockToEdge(targetY: Float = translationY, preferLeft: Boolean? = null) {
         cancelAutoDockCountdown()
+        performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
         val parentW = (parent as? View)?.width ?: resources.displayMetrics.widthPixels
         val isLeft = preferLeft ?: (translationX < parentW / 2)
         val clampedY = clampY(targetY)
@@ -254,6 +255,15 @@ class FloatingDockView(context: Context) : FrameLayout(context) {
                 onPositionChanged?.invoke(true, isLeft, clampedY)
             }
             .start()
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        velocityTracker?.recycle()
+        velocityTracker = null
+        handler.removeCallbacksAndMessages(null)
+        breatheAnimator?.cancel()
+        breatheAnimator = null
     }
 
     fun resetAutoDockCountdown() {
@@ -277,6 +287,12 @@ class FloatingDockView(context: Context) : FrameLayout(context) {
                 startTranslationY = translationY
                 isDragging = false
 
+                velocityTracker?.recycle()
+                velocityTracker = VelocityTracker.obtain()
+                velocityTracker?.addMovement(event)
+
+                performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+
                 // 按下时轻微内缩反馈 (触觉按压质感)
                 if (!isDocked) {
                     bubbleView.animate().scaleX(0.92f).scaleY(0.92f).setDuration(100).start()
@@ -284,6 +300,7 @@ class FloatingDockView(context: Context) : FrameLayout(context) {
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
+                velocityTracker?.addMovement(event)
                 val dx = event.rawX - downRawX
                 val dy = event.rawY - downRawY
                 val dist = hypot(dx.toDouble(), dy.toDouble()).toFloat()
@@ -302,6 +319,12 @@ class FloatingDockView(context: Context) : FrameLayout(context) {
                 return true
             }
             MotionEvent.ACTION_UP -> {
+                velocityTracker?.addMovement(event)
+                velocityTracker?.computeCurrentVelocity(1000)
+                val vx = velocityTracker?.xVelocity ?: 0f
+                velocityTracker?.recycle()
+                velocityTracker = null
+
                 // 抬起恢复尺寸
                 if (!isDocked) {
                     bubbleView.animate().scaleX(1.0f).scaleY(1.0f).setDuration(140).setInterpolator(OvershootInterpolator(1.4f)).start()
@@ -314,9 +337,10 @@ class FloatingDockView(context: Context) : FrameLayout(context) {
                 if (isDragging && dist > touchSlop) {
                     val parentW = (parent as? View)?.width ?: resources.displayMetrics.widthPixels
                     val currentX = translationX
-                    if (currentX < dp(45f)) {
+                    // 物理抛掷惯性识别 (Fling > 1200px/s 顺势吸附到对应边缘)
+                    if (vx < -1200f || currentX < dp(45f)) {
                         dockToEdge(preferLeft = true)
-                    } else if (currentX > parentW - width - dp(45f)) {
+                    } else if (vx > 1200f || currentX > parentW - width - dp(45f)) {
                         dockToEdge(preferLeft = false)
                     } else {
                         isDocked = false
@@ -339,6 +363,8 @@ class FloatingDockView(context: Context) : FrameLayout(context) {
                 return true
             }
             MotionEvent.ACTION_CANCEL -> {
+                velocityTracker?.recycle()
+                velocityTracker = null
                 if (!isDocked) {
                     bubbleView.animate().scaleX(1.0f).scaleY(1.0f).setDuration(140).start()
                 }

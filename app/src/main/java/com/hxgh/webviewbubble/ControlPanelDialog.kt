@@ -42,6 +42,7 @@ class ControlPanelDialog(
     private var isDismissing = false
 
     init {
+        window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
         buildUi()
     }
 
@@ -133,6 +134,7 @@ class ControlPanelDialog(
             textSize = 13.5f
             maxLines = 1
             setSingleLine(true)
+            setSelectAllOnFocus(true)
             imeOptions = EditorInfo.IME_ACTION_DONE
             background = GradientDrawable().apply {
                 setColor(inputBg)

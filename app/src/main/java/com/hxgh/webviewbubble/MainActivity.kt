@@ -37,6 +37,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -53,6 +55,7 @@ class MainActivity : ComponentActivity() {
     private var fileChooser: ValueCallback<Array<Uri>>? = null
     private lateinit var iconManager: LauncherIconManager
     private val iconFetcher = IconFetcher { siteWebView.favicon }
+    private var lastFetchedHost = ""
 
     private var currentTheme = "dark"
     private var currentThemeMode = "system"
@@ -159,6 +162,10 @@ class MainActivity : ComponentActivity() {
         siteWebView.setBackgroundColor(bgColor)
         progressBar.setBackgroundColor(if (isDark) Color.WHITE else Color.BLACK)
         dockView.isDarkTheme = isDark
+
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+            WebSettingsCompat.setAlgorithmicDarkeningAllowed(siteWebView.settings, isDark)
+        }
 
         if (guideHubView != null && guideHubView?.visibility == View.VISIBLE) {
             showGuideHub()
@@ -277,6 +284,23 @@ class MainActivity : ComponentActivity() {
             setSupportMultipleWindows(true)
             mediaPlaybackRequiresUserGesture = false
             mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+
+            // 120Hz 极致顺滑与手势缩放优化
+            builtInZoomControls = true
+            displayZoomControls = false
+            useWideViewPort = true
+            loadWithOverviewMode = true
+            cacheMode = WebSettings.LOAD_DEFAULT
+
+            // 现代 WebKit 离屏预栅格化 (大幅提升 120Hz 滑动帧率，杜绝白块撕裂)
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.OFF_SCREEN_PRERASTER)) {
+                WebSettingsCompat.setOffscreenPreRaster(this, true)
+            }
+
+            // 现代原生暗色适配 (Android 13+ 原生深浅色引擎)
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.ALGORITHMIC_DARKENING)) {
+                WebSettingsCompat.setAlgorithmicDarkeningAllowed(this, currentTheme == "dark")
+            }
         }
 
         siteWebView.webViewClient = object : WebViewClient() {
@@ -301,14 +325,18 @@ class MainActivity : ComponentActivity() {
                     currentUrl = url
                     prefs.edit().putString("wrapped_url", url).apply()
 
-                    // 自动抓取并更新桌面图标
-                    lifecycleScope.launch {
-                        try {
-                            val result = iconFetcher.fetch(url)
-                            if (result != null) {
-                                iconManager.saveAndApply(result.bitmap)
-                            }
-                        } catch (_: Exception) {}
+                    // 仅当域名变更时自动抓取并更新桌面图标 (防过度刷新消耗电量)
+                    val host = runCatching { Uri.parse(url).host.orEmpty() }.getOrDefault("")
+                    if (host.isNotEmpty() && host != lastFetchedHost) {
+                        lastFetchedHost = host
+                        lifecycleScope.launch {
+                            try {
+                                val result = iconFetcher.fetch(url)
+                                if (result != null) {
+                                    iconManager.saveAndApply(result.bitmap)
+                                }
+                            } catch (_: Exception) {}
+                        }
                     }
                 }
             }
@@ -521,6 +549,11 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        (siteWebView.parent as? ViewGroup)?.removeView(siteWebView)
+        siteWebView.stopLoading()
+        siteWebView.loadUrl("about:blank")
+        siteWebView.clearHistory()
+        siteWebView.removeAllViews()
         siteWebView.destroy()
         super.onDestroy()
     }
