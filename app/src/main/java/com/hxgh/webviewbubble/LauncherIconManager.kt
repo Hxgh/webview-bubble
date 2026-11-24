@@ -1,4 +1,4 @@
-package com.hxgh.webshell
+package com.hxgh.webviewbubble
 
 import android.app.Activity
 import android.content.ComponentName

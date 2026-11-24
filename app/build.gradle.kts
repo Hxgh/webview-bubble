@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.hxgh.webshell"
+    namespace = "com.hxgh.webviewbubble"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.hxgh.webshell"
+        applicationId = "com.hugh.webviewbubble"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

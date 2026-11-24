@@ -10,3 +10,4 @@
 *.apk
 *.sha256
 app/build/
+/dist/

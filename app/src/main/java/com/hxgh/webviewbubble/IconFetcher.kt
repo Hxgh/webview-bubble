@@ -1,4 +1,4 @@
-package com.hxgh.webshell
+package com.hxgh.webviewbubble
 
 import android.graphics.Bitmap
 import android.graphics.Canvas

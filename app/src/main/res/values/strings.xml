@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Web Shell</string>
+    <string name="app_name">ZCode</string>
     <string name="default_url">https://zcode.z.ai/cn/</string>
     <string name="apply">应用</string>
     <string name="cancel">取消</string>

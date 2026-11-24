@@ -18,5 +18,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "webshell-android"
+rootProject.name = "webview-bubble"
 include(":app")
